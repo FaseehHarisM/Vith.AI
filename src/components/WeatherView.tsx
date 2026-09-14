@@ -757,7 +757,7 @@ const WeatherView = ({ activeField, selectedFields, allFields }: WeatherViewProp
                 <h3 className="text-sm font-medium text-foreground">Accumulated Precipitation, mm</h3>
                 <div className="flex items-center gap-4 text-xs">
                   <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_GOLD }} />Precipitation</span>
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_CREAM }} />Evapotranspiration</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm" style={{ backgroundColor: CHART_CREAM }} />Water Loss (Evap)</span>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={220}>
@@ -768,7 +768,7 @@ const WeatherView = ({ activeField, selectedFields, allFields }: WeatherViewProp
                   <YAxis stroke="hsl(150, 10%, 55%)" fontSize={11} />
                   <Tooltip content={<CustomChartTooltip />} />
                   <Area type="monotone" dataKey="accumulated" stroke={CHART_GOLD} strokeWidth={2.5} fill="url(#goldGrad)" dot={{ r: 3, fill: CHART_GOLD }} activeDot={{ r: 5 }} />
-                  <Line type="monotone" dataKey="evapotranspiration" stroke={CHART_CREAM} strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
+                  <Line type="monotone" dataKey="evapotranspiration" name="Water Loss (Evap)" stroke={CHART_CREAM} strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

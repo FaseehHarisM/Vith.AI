@@ -645,7 +645,7 @@ const FieldDetailView = ({ field, onBack, onEditBoundary }: FieldDetailViewProps
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <Satellite className="w-3.5 h-3.5" /> {urban ? "Green Cover Analysis" : "Satellite NDVI Analysis"}
+              <Satellite className="w-3.5 h-3.5" /> {urban ? "Green Cover Analysis" : "Crop Health (Satellite)"}
             </h3>
             <button onClick={fetchNdviStats} disabled={ndviLoading}
               className="text-xs px-3 py-1 rounded-md border border-border text-foreground hover:bg-accent transition-colors disabled:opacity-50">
@@ -719,7 +719,7 @@ const FieldDetailView = ({ field, onBack, onEditBoundary }: FieldDetailViewProps
                 </div>
                 {soilData.texture.usda_class && (
                   <div className="text-xs text-muted-foreground mt-1">
-                    USDA Texture: <span className="text-foreground font-medium">{soilData.texture.usda_class}</span>
+                    Soil Type: <span className="text-foreground font-medium">{soilData.texture.usda_class}</span>
                   </div>
                 )}
               </div>
@@ -727,12 +727,12 @@ const FieldDetailView = ({ field, onBack, onEditBoundary }: FieldDetailViewProps
               {/* Key Metrics Grid */}
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { label: "pH", value: soilData.metrics.ph?.toFixed(1) || "N/A", sub: soilData.metrics.ph_rating, icon: Beaker, color: soilData.metrics.ph != null ? (soilData.metrics.ph < 6.5 || soilData.metrics.ph > 7.5 ? "#C6B77E" : "#7BC75B") : undefined },
-                  { label: "Organic Carbon", value: soilData.metrics.soc_g_per_kg != null ? `${soilData.metrics.soc_g_per_kg} g/kg` : "N/A", sub: soilData.metrics.soc_rating, icon: Leaf, color: soilData.metrics.soc_rating === "High" ? "#7BC75B" : soilData.metrics.soc_rating === "Medium" ? "#C6B77E" : "#d73027" },
-                  { label: "Nitrogen", value: soilData.metrics.nitrogen_g_per_kg != null ? `${soilData.metrics.nitrogen_g_per_kg} g/kg` : "N/A", sub: soilData.metrics.nitrogen_rating, icon: FlaskConical },
-                  { label: "CEC", value: soilData.metrics.cec != null ? `${soilData.metrics.cec} mmol/kg` : "N/A", sub: "Ion exchange capacity", icon: Gauge },
-                  { label: "Bulk Density", value: soilData.metrics.bulk_density != null ? `${soilData.metrics.bulk_density} kg/dm³` : "N/A", sub: soilData.metrics.bulk_density != null ? (soilData.metrics.bulk_density > 1.6 ? "Compacted" : "Normal") : "", icon: Layers },
-                  { label: "Coarse Frags", value: soilData.metrics.coarse_fragments_pct != null ? `${soilData.metrics.coarse_fragments_pct}%` : "N/A", sub: "Rock content", icon: Thermometer },
+                  { label: "Acidity (pH)", value: soilData.metrics.ph?.toFixed(1) || "N/A", sub: soilData.metrics.ph_rating, icon: Beaker, color: soilData.metrics.ph != null ? (soilData.metrics.ph < 6.5 || soilData.metrics.ph > 7.5 ? "#C6B77E" : "#7BC75B") : undefined },
+                  { label: "Carbon Nutrients", value: soilData.metrics.soc_g_per_kg != null ? `${soilData.metrics.soc_g_per_kg} g/kg` : "N/A", sub: soilData.metrics.soc_rating, icon: Leaf, color: soilData.metrics.soc_rating === "High" ? "#7BC75B" : soilData.metrics.soc_rating === "Medium" ? "#C6B77E" : "#d73027" },
+                  { label: "Nitrogen Level", value: soilData.metrics.nitrogen_g_per_kg != null ? `${soilData.metrics.nitrogen_g_per_kg} g/kg` : "N/A", sub: soilData.metrics.nitrogen_rating, icon: FlaskConical },
+                  { label: "Nutrient Holding", value: soilData.metrics.cec != null ? `${soilData.metrics.cec} mmol/kg` : "N/A", sub: "Capacity to hold food", icon: Gauge },
+                  { label: "Soil Compactness", value: soilData.metrics.bulk_density != null ? `${soilData.metrics.bulk_density} kg/dm³` : "N/A", sub: soilData.metrics.bulk_density != null ? (soilData.metrics.bulk_density > 1.6 ? "Too hard" : "Good flow") : "", icon: Layers },
+                  { label: "Rock Content", value: soilData.metrics.coarse_fragments_pct != null ? `${soilData.metrics.coarse_fragments_pct}%` : "N/A", sub: "Stones in soil", icon: Thermometer },
                 ].map((m, i) => (
                   <div key={i} className="p-3 rounded-xl border border-border bg-accent/10">
                     <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-1"><m.icon className="w-3 h-3" />{m.label}</div>
@@ -745,7 +745,7 @@ const FieldDetailView = ({ field, onBack, onEditBoundary }: FieldDetailViewProps
               {/* Soil Texture Pie */}
               {textureData && (
                 <div className="p-4 rounded-xl border border-border bg-accent/15">
-                  <div className="text-xs font-medium text-muted-foreground mb-2">Soil Texture Composition</div>
+                  <div className="text-xs font-medium text-muted-foreground mb-2">Soil Composition (Sand vs Clay)</div>
                   <div className="flex items-center gap-4">
                     <ResponsiveContainer width={100} height={100}>
                       <PieChart>

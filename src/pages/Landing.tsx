@@ -84,10 +84,17 @@ export default function Landing() {
           Satellite-Powered Agricultural Decision Support System
         </div>
 
-        <h1 className={`text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-5 transition-all duration-700 delay-100 ${show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+        <h1 className={`text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-4 transition-all duration-700 delay-100 ${show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
           Every seed<br />
           <span className="text-[#7BC75B]">deserves intelligence.</span>
         </h1>
+
+        <div className={`mb-6 transition-all duration-1000 delay-300 ${show ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
+          <h2 className="text-2xl md:text-3xl text-white/90 font-light" style={{ fontFamily: "'Anek Malayalam', sans-serif" }}>
+            "<span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7BC75B] to-[#b3e099] font-medium drop-shadow-[0_0_8px_rgba(123,199,91,0.5)]">വിത്തുഗുണം പത്തുഗുണം</span>"
+          </h2>
+          <p className="text-xs text-white/30 tracking-widest uppercase mt-2">Good seed, tenfold yield</p>
+        </div>
 
         <p className={`text-base md:text-lg text-white/50 max-w-2xl mb-8 leading-relaxed transition-all duration-700 delay-200 ${show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
           VITH.AI translates satellite imagery, soil science & live weather into{" "}
@@ -96,19 +103,15 @@ export default function Landing() {
 
         <div className={`flex flex-col sm:flex-row gap-4 transition-all duration-700 delay-300 ${show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
           <button onClick={() => navigate("/app")}
-            className="group flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-[#7BC75B] text-[#050f08] font-bold text-base hover:bg-[#90d96e] transition-all shadow-lg shadow-[#7BC75B]/25 hover:shadow-[#7BC75B]/40 hover:scale-105">
+            className="group flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-[#7BC75B] text-[#050f08] font-bold text-base hover:bg-[#90d96e] transition-all shadow-[0_0_20px_rgba(123,199,91,0.3)] hover:shadow-[0_0_30px_rgba(123,199,91,0.5)] hover:scale-105">
             <Map className="w-5 h-5" /> Open My Farm
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
           <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
-            className="px-8 py-4 rounded-xl border border-white/10 text-white/70 font-medium text-base hover:border-white/20 hover:text-white transition-all">
+            className="px-8 py-4 rounded-xl border border-white/10 text-white/70 font-medium text-base hover:border-white/30 hover:text-white transition-all bg-white/[0.02]">
             How It Works ↓
           </button>
         </div>
-
-        <p className={`mt-6 text-[11px] text-white/20 italic transition-all duration-700 delay-500 ${show ? "opacity-100" : "opacity-0"}`}>
-          "വിത്തുഗുണം പത്തുഗുണം"
-        </p>
       </section>
 
       {/* ── WHO IS IT FOR ── */}

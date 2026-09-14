@@ -23,9 +23,8 @@ const FEATURES = [
 ];
 
 const TECH = [
-  "Google Earth Engine", "Sentinel-2", "SoilGrids", "Groq LLM",
-  "Open-Meteo", "Mapbox GL", "React", "TypeScript",
-  "Supabase", "Tailwind CSS"
+  "Google Earth Engine", "Sentinel-2 Satellite", "ISRIC SoilGrids",
+  "Groq AI", "Mapbox Spatial", "Supabase Edge"
 ];
 
 export default function Landing() {

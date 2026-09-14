@@ -27,6 +27,49 @@ VITH.AI solves this by bringing space technology directly to the farmer's smartp
 * **Live Satellite Feeds:** Integrates live data from Sentinel-2 (for vegetation health), SoilGrids (for soil properties), and Open-Meteo (for hyper-local climate).
 * **Smart Fallbacks:** The app is bulletproofed against internet timeouts. If a satellite API fails, our local Agronomy Engine instantly kicks in to ensure the farmer always receives guidance.
 
+### Edge Case Detection
+The system detects unsuitable regions and blocks crop planning:
+* **Water bodies:** ESA WorldCover "Water" land use percentage (80%+)
+* **Extreme deserts:** Annual rainfall from CHIRPS via GEE (Below 50mm, or keyword match)
+* **Polar regions:** Average latitude of polygon coordinates (Above 66 degrees, or keyword match)
+* **High altitude:** Elevation from SRTM via GEE (Above 5000m)
+* **Urban regions:** ESA WorldCover "Built-up" percentage (30%+)
+
+## Architecture
+```text
+User / Browser
+      Göé
+      Gû+
+   Frontend
+React + Mapbox GL JS + Tailwind + shadcn
+      Göé
+      Gû+
+Edge Functions (Supabase - Deno)
+      Göé
+ GöîGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGö¼GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGö¼GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGö¼GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGö¼GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGö¼GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÉ
+ Gû+               Gû+               Gû+               Gû+               Gû+               Gû+               
+Mapbox Token   Field Analysis   Land Analytics  NDVI Tiles      NDVI Series     Soil Data
+(Mapbox API)   (GEE + AI)       (GEE)           (GEE)           (GEE)           (SoilGrids)
+                   Göé               Göé               Göé               Göé               Göé
+                   Gû+               Gû+               Gû+               Gû+               Gû+
+             AI Crop Planning   Land Use        Tile Service    Time-Series     Soil Properties
+             (Gemini 2.5 Pro)   + Suitability                                   (250m)
+                   Göé
+                   Gû+
+            Crop Recommendations
+
+      Göé
+      Gû+
+External Data Sources
+      Göé
+ GöîGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGö¼GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGö¼GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGö¼GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÉ
+ Gû+               Gû+               Gû+               Gû+               Gû+
+Google Earth    Open-Meteo     SoilGrids       Mapbox         Sentinel-2 
+Engine          (Weather)      (Soil Data)     (Maps API)    ESA WorldCover
+                                                              SRTM GÇó CHIRPS
+```
+
+
 ## Tech Stack
 * **Frontend:** React, Vite, Tailwind CSS, Mapbox GL JS
 * **Backend:** Supabase Edge Functions (Serverless Deno)
@@ -44,3 +87,4 @@ npm run dev
 ```
 
 *Built for AI Conclave 2026 Hackathon.*
+

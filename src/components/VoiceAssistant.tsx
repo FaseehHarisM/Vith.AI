@@ -19,15 +19,26 @@ export default function VoiceAssistant({ actionTextEn, farmName }: VoiceAssistan
   const [voicesLoaded, setVoicesLoaded] = useState(false);
   const synth = window.speechSynthesis;
   
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   useEffect(() => {
     const loadVoices = () => setVoicesLoaded(true);
     synth.addEventListener("voiceschanged", loadVoices);
     if (synth.getVoices().length > 0) setVoicesLoaded(true);
-    return () => synth.removeEventListener("voiceschanged", loadVoices);
+    return () => {
+      synth.removeEventListener("voiceschanged", loadVoices);
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
   }, [synth]);
 
   const handleSpeak = () => {
     if (isPlaying) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
       synth.cancel();
       setIsPlaying(false);
       return;
@@ -38,29 +49,49 @@ export default function VoiceAssistant({ actionTextEn, farmName }: VoiceAssistan
     // Choose text based on language
     let textToSpeak = `${farmName}. ${actionTextEn}`;
     let langCode = "en-US";
+    let ttsLang = "en";
     
     if (language === "ml") {
       const mlText = TRANSLATIONS[actionTextEn] || actionTextEn;
       textToSpeak = `${farmName} എന്ന കൃഷിയിടത്തിൽ, ${mlText}`;
       langCode = "ml-IN";
+      ttsLang = "ml";
     } else if (language === "hi") {
       langCode = "hi-IN";
+      ttsLang = "hi";
       textToSpeak = `${farmName}. ${actionTextEn}`; // Simplified fallback
     }
 
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = langCode;
-    utterance.rate = 0.9; // Slightly slower for clarity
+    // Use High-Quality Google Translate TTS for Hackathon Demo
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${ttsLang}&q=${encodeURIComponent(textToSpeak)}`;
+    const audio = new Audio(url);
+    audioRef.current = audio;
     
-    // Try to find a native voice
-    const voices = synth.getVoices();
-    const voice = voices.find(v => v.lang.includes(langCode) || v.lang.includes(langCode.split('-')[0]));
-    if (voice) utterance.voice = voice;
+    audio.onended = () => {
+      setIsPlaying(false);
+      audioRef.current = null;
+    };
+    
+    audio.onerror = () => {
+      // Fallback to Web Speech API if blocked
+      console.warn("High-quality TTS failed, falling back to local synthesis");
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = langCode;
+      utterance.rate = 0.9; // Slightly slower for clarity
+      
+      const voices = synth.getVoices();
+      const voice = voices.find(v => v.lang.includes(langCode) || v.lang.includes(langCode.split('-')[0]));
+      if (voice) utterance.voice = voice;
 
-    utterance.onend = () => setIsPlaying(false);
-    utterance.onerror = () => setIsPlaying(false);
+      utterance.onend = () => setIsPlaying(false);
+      utterance.onerror = () => setIsPlaying(false);
+      
+      synth.speak(utterance);
+    };
     
-    synth.speak(utterance);
+    audio.play().catch(e => {
+      audio.onerror(e as any);
+    });
   };
 
   return (

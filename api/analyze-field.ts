@@ -349,75 +349,47 @@ Respond in this EXACT format (keep each section to 1-2 sentences max). Write the
 | Soil Health | [based on data] | [status] |
 | Water Stress | [based on moisture] | [status] |
 | Sustainability | [score] | [status] |`
-      : `You are a concise precision agriculture expert. Give a SHORT, data-driven analysis for this field. Use simple language a farmer can understand.
-
-**Field:** ${fieldName} | **Crop:** ${crop} | **Area:** ${area} acres | **Location:** ${location}
-**Weather:** ${temperature}°C, ${humidity}% humidity, ${windSpeed} km/h wind
-**Soil Moisture:** ${soilMoisture || "N/A"}% | **NDVI Estimate:** ${ndviEstimate || "0.55"}${soilContext}${aqiContext}
-
-Respond in this EXACT format (keep each section to 1-2 sentences max). Write the whole analysis in ${responseLanguage} only:
-
-## Vegetation Health
-[Quick assessment of NDVI ${ndviEstimate || "0.55"} for ${crop}. Is it healthy or concerning?]
-
-## Water Stress Assessment
-[Analyze soil moisture ${soilMoisture || "N/A"}% against field capacity ${soilData?.waterRetention?.field_capacity_pct ?? "N/A"}% and wilting point ${soilData?.waterRetention?.wilting_point_pct ?? "N/A"}%. Is the field over/under-irrigated?]
-
-## Soil Health Analysis
-[Assess soil pH ${soilData?.ph ?? "N/A"}, organic carbon ${soilData?.soc ?? "N/A"} g/kg, nitrogen ${soilData?.nitrogen ?? "N/A"} g/kg. What amendments are needed? Is the soil suitable for ${crop}?]
-
-## Growth Stage
-[Estimated current stage for ${crop} this time of year]
-
-## Land Suitability
-**Score: X/10** — [Justification based on soil type, pH, nutrients, water retention]
-
-## Crop Recommendations
-Based on the soil data (${soilData?.texture || "unknown"} texture, pH ${soilData?.ph ?? "N/A"}) and climate:
-- [Crop 1] — [why it suits this soil and climate]
-- [Crop 2] — [why]
-- [Crop 3] — [why]
-
-## Carbon & Sustainability
-[Soil carbon stock assessment. Erosion risk. Recommendations for sustainable farming: cover crops, reduced tillage, drip irrigation, etc. Include specific water/carbon savings estimates.]
-
-## Rainfall Forecast Risk
-[Weather-based risk assessment. Tips for farmers to prevent crop loss.]
-
-## Key Risks
-- [Risk 1 with severity and action]
-- [Risk 2 with severity and action]
-
-## Summary Table
-| Metric | Value | Status |
-|--------|-------|--------|
-| NDVI | ${ndviEstimate || "0.55"} | [Good/Fair/Poor] |
-| Soil pH | ${soilData?.ph ?? "N/A"} | [Optimal/Needs amendment] |
-| Organic Carbon | ${soilData?.soc ?? "N/A"} g/kg | [High/Medium/Low] |
-| Water Stress | [assessment] | [status] |
-| Nitrogen | ${soilData?.nitrogen ?? "N/A"} g/kg | [status] |
-| Yield Potential | [estimate] | [status] |`;
+      : `You are a precision agriculture AI assistant for farmers in Kerala/India. Give a data-driven analysis for this field. Use simple, actionable language.
+  
+  **Field:** ${fieldName} | **Crop:** ${crop} | **Area:** ${area} acres | **Location:** ${location}
+  **Weather:** ${temperature}°C, ${humidity}% humidity, ${windSpeed} km/h wind
+  **Soil Moisture:** ${soilMoisture || "N/A"}% | **NDVI Estimate:** ${ndviEstimate || "0.55"}${soilContext}${aqiContext}
+  
+  Respond in EXACTLY this JSON structure. Provide all human-facing text in ${responseLanguage} (Malayalam if requested):
+  {
+    "health_score": 85,
+    "health_status": "നല്ലത്",
+    "risk_level": "Low/Medium/High",
+    "main_concern": "A short 1-line phrase about the main issue to watch",
+    "today_actions": [
+      { "title": "Action title", "description": "Why to do this action today", "icon": "💧" },
+      { "title": "Action title", "description": "Why to do this action today", "icon": "🌿" },
+      { "title": "Action title", "description": "Why to do this action today", "icon": "🔍" }
+    ],
+    "risk_radar": {
+      "water_stress": "Low/Medium/High",
+      "heat_stress": "Low/Medium/High",
+      "disease_risk": "Low/Medium/High",
+      "soil_decline": "Low/Medium/High"
+    },
+    "expert_analysis": "Write a 3-paragraph markdown report for agricultural experts containing: Vegetation Health, Soil Health Analysis, Land Suitability, and Carbon Sustainability."
+  }`;
 
     const response = await fetch(AI_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${GROQ_API_KEY}`,
         "Content-Type": "application/json",
+        Authorization: `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
         model: GROQ_MODEL,
         messages: [
-          { role: "system", content: isUrban
-            ? `You are an urban sustainability and environmental expert. Provide data-driven, actionable insights. Use markdown formatting. Focus on sustainability, green infrastructure, air quality, and livability. Present data clearly for non-technical stakeholders. Write in ${responseLanguage} only.`
-            : `You are a precision agriculture expert who communicates clearly with farmers. Provide data-driven, actionable insights. Use markdown formatting. Be specific with numbers. Include soil health and water management recommendations based on the soil data provided. Make recommendations a farmer can act on today. Write in ${responseLanguage} only.`
-          },
-          { role: "user", content: prompt },
+          { role: "system", content: "You are a precision agriculture expert. Return ONLY valid JSON if agricultural, or markdown if urban." },
+          { role: "user", content: prompt }
         ],
-        temperature: 1,
-        max_completion_tokens: 2048,
-        top_p: 1,
-        reasoning_effort: "medium",
-        stream: false,
+        temperature: 0.2,
+        max_tokens: 3000,
+        response_format: isUrban ? undefined : { type: "json_object" }
       }),
     });
 

@@ -36,6 +36,16 @@ interface FieldWeather {
   weather_code: number;
 }
 
+interface AIAnalysisJson {
+  health_score?: number;
+  health_status?: string;
+  risk_level?: string;
+  main_concern?: string;
+  today_actions?: { title: string; description: string; icon: string }[];
+  risk_radar?: { water_stress: string; heat_stress: string; disease_risk: string; soil_decline: string };
+  expert_analysis?: string;
+}
+
 interface NdviStats {
   mean_ndvi: number;
   min_ndvi: number;
@@ -242,6 +252,8 @@ const FieldDetailView = ({ field, onBack, onEditBoundary }: FieldDetailViewProps
   const [ndviStats, setNdviStats] = useState<NdviStats | null>(null);
   const [ndviLoading, setNdviLoading] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string>("");
+  const [parsedAiAnalysis, setParsedAiAnalysis] = useState<AIAnalysisJson | null>(null);
+  const [farmerMode, setFarmerMode] = useState(true);
   const [aiLoading, setAiLoading] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [soilData, setSoilData] = useState<SoilData | null>(null);
@@ -339,7 +351,11 @@ const FieldDetailView = ({ field, onBack, onEditBoundary }: FieldDetailViewProps
     const cache = getCache<string>(ANALYSIS_CACHE_KEY);
     const cacheKey = `${field.id}:${language}`;
     const cached = cache[cacheKey];
-    if (cached && Date.now() - cached.timestamp < 3600000) { setAiAnalysis(cached.data); setShowAnalysis(true); }
+    if (cached && Date.now() - cached.timestamp < 3600000) { 
+        setAiAnalysis(cached.data); 
+        try { setParsedAiAnalysis(JSON.parse(cached.data)); } catch (e) {}
+        setShowAnalysis(true); 
+      }
     else { setAiAnalysis(""); setShowAnalysis(false); }
   }, [field.id, language]);
 
@@ -377,6 +393,7 @@ const FieldDetailView = ({ field, onBack, onEditBoundary }: FieldDetailViewProps
           : "";
       if (!analysisText.trim()) throw new Error("Empty analysis response");
       setAiAnalysis(analysisText);
+        try { setParsedAiAnalysis(JSON.parse(analysisText)); } catch (e) {}
       setCache(ANALYSIS_CACHE_KEY, `${field.id}:${language}`, analysisText);
     } catch (e) {
       console.error("AI analysis error:", e);
@@ -386,7 +403,7 @@ const FieldDetailView = ({ field, onBack, onEditBoundary }: FieldDetailViewProps
     } finally { setAiLoading(false); }
   };
 
-  const analysisBlocks = useMemo(() => splitAnalysisBlocks(aiAnalysis), [aiAnalysis]);
+  const analysisBlocks = useMemo(() => splitAnalysisBlocks(parsedAiAnalysis?.expert_analysis || aiAnalysis), [aiAnalysis]);
 
   const waterStress = waterStressLabel(soilMoisture, null);
 

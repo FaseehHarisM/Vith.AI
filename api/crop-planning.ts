@@ -195,6 +195,11 @@ Create a JSON response with this EXACT structure (no markdown, pure JSON):
       "water_needs": "medium",
       "season": "Perennial",
       "yield_estimate": "1.5 tonnes/ha",
+      "economics": {
+        "estimated_input_cost_inr_per_acre": 45000,
+        "estimated_revenue_inr_per_acre": 85000,
+        "profit_margin_pct": 88
+      },
       "position": { "x": 0.25, "y": 0.5 }
     }
   ],
@@ -204,7 +209,10 @@ Create a JSON response with this EXACT structure (no markdown, pure JSON):
       "secondary": "Pepper",
       "emoji": "🥥+🌿",
       "benefit": "Pepper vines use coconut trunk for support",
-      "spacing": "Pepper planted 1m from coconut base"
+      "spacing": "Pepper planted 1m from coconut base",
+      "economics": {
+        "combined_revenue_inr_per_acre": 120000
+      }
     }
   ],
   "rotation_plan": [
@@ -215,6 +223,7 @@ Create a JSON response with this EXACT structure (no markdown, pure JSON):
   "summary": "Brief 2-sentence summary of the plan",
   "tips": ["tip 1", "tip 2", "tip 3"],
   "overall_score": 8.5,
+  "confidence_score_pct": 92,
   "water_saving_pct": 25,
   "expected_revenue_increase_pct": 15
 }

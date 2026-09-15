@@ -357,22 +357,23 @@ Respond in this EXACT format (keep each section to 1-2 sentences max). Write the
   
   Respond in EXACTLY this JSON structure. Provide all human-facing text in ${responseLanguage} (Malayalam if requested):
   {
-    "health_score": 85,
-    "health_status": "നല്ലത്",
-    "risk_level": "Low/Medium/High",
-    "main_concern": "A short 1-line phrase about the main issue to watch",
+    "health_score": <number 0-100, computed from ndvi+soil+weather context>,
+    "health_status": "<Excellent/Good/Fair/Poor or equivalent in ${responseLanguage}>",
+    "risk_level": "<Low/Medium/High>",
+    "main_concern": "<1-line most important issue in ${responseLanguage}>",
     "today_actions": [
-      { "title": "Action title", "description": "Why to do this action today", "icon": "💧" },
-      { "title": "Action title", "description": "Why to do this action today", "icon": "🌿" },
-      { "title": "Action title", "description": "Why to do this action today", "icon": "🔍" }
+      { "title": "<action title>", "description": "<why + how>", "icon": "💧" },
+      { "title": "<action title>", "description": "<why + how>", "icon": "🌿" },
+      { "title": "<action title>", "description": "<why + how>", "icon": "🔍" }
     ],
     "risk_radar": {
-      "water_stress": "Low/Medium/High",
-      "heat_stress": "Low/Medium/High",
-      "disease_risk": "Low/Medium/High",
-      "soil_decline": "Low/Medium/High"
+      "water_stress": "<Low/Medium/High>",
+      "heat_stress": "<Low/Medium/High>",
+      "disease_risk": "<Low/Medium/High>",
+      "soil_decline": "<Low/Medium/High>"
     },
-    "expert_analysis": "Write a 3-paragraph markdown report for agricultural experts containing: Vegetation Health, Soil Health Analysis, Land Suitability, and Carbon Sustainability."
+    "expert_analysis": "<markdown paragraph for technical mode>",
+    "confidence_pct": <number, 60-95>
   }`;
 
     const response = await fetch(AI_URL, {
@@ -384,7 +385,7 @@ Respond in this EXACT format (keep each section to 1-2 sentences max). Write the
       body: JSON.stringify({
         model: GROQ_MODEL,
         messages: [
-          { role: "system", content: "You are a precision agriculture expert. Return ONLY valid JSON if agricultural, or markdown if urban." },
+          { role: "system", content: isUrban ? "You are an urban sustainability analyst. Return markdown." : "You are VITH.AI, a Kerala-first farm intelligence assistant. Return ONLY valid JSON. No markdown, no code blocks." },
           { role: "user", content: prompt }
         ],
         temperature: 0.2,
@@ -406,9 +407,16 @@ Respond in this EXACT format (keep each section to 1-2 sentences max). Write the
 
 
     const aiData = await response.json();
-    const analysis = aiData.choices?.[0]?.message?.content || "Analysis unavailable.";
-
-    return new Response(JSON.stringify({ analysis }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    let content = aiData.choices?.[0]?.message?.content || "{}";
+    // Try to parse as JSON first (our new structured format)
+    content = content.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
+    try {
+      const parsed = JSON.parse(content);
+      return new Response(JSON.stringify(parsed), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } catch {
+      // Fallback: return as analysis string for backward compat
+      return new Response(JSON.stringify({ analysis: content }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
   } catch (e) {
     console.error("analyze-field error:", e);
     const msg = e instanceof Error ? e.message : String(e);

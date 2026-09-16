@@ -108,11 +108,12 @@ serve(async (req) => {
   try {
     let {
       fieldName, crop, area, location, coordinates,
-      ndviData, soilData, weatherData, suitabilityData, responseLanguage,
+      ndviData, soilData, weatherData, suitabilityData, responseLanguage, enforcedZones
     } = await req.json();
     fieldName = clampStr(fieldName);
     crop = clampStr(crop);
     location = clampStr(location);
+
     area = clampNum(area, 0, 1e7);
     ndviData = sanitizeNdvi(ndviData);
     soilData = sanitizeSoil(soilData);
@@ -178,7 +179,13 @@ Based on the field data below, create an optimal crop planning layout that split
 
 ${context}
 
-**Field Bounds:** ${fieldWidth.toFixed(6)}° wide × ${fieldHeight.toFixed(6)}° tall
+  **Field Bounds:** ${fieldWidth.toFixed(6)}° wide × ${fieldHeight.toFixed(6)}° tall
+  
+  CRITICAL INSTRUCTION: You MUST use EXACTLY these crops and area percentages for the zones, IN THE EXACT SAME ORDER:
+  ${enforcedZones ? JSON.stringify(enforcedZones, null, 2) : "Use your best judgement."}
+  
+  CRITICAL INSTRUCTION: Do NOT translate the "crop" field in the JSON! The "crop" field MUST remain exactly in English so it matches our internal database (e.g. "Rubber", "Coconut", "Tapioca", "Cardamom", "Pepper", "Banana", "Paddy", etc). 
+  You MUST translate "name", "reason", "season", "yield_estimate", "primary", "secondary", "description", "action", "phase", and "summary" into ${responseLanguage || 'English'}.
 
 Create a JSON response with this EXACT structure (no markdown, pure JSON):
 {
@@ -216,9 +223,9 @@ Create a JSON response with this EXACT structure (no markdown, pure JSON):
     }
   ],
   "rotation_plan": [
-    { "season": "Kharif", "months": "Jun-Oct", "crops": ["Paddy", "Tapioca"] },
-    { "season": "Rabi", "months": "Nov-Mar", "crops": ["Cowpea", "Sesame"] },
-    { "season": "Zaid", "months": "Mar-Jun", "crops": ["Vegetables"] }
+    { "season": "Monsoon", "months": "Jun-Sep", "crops": ["Paddy", "Tapioca"] },
+    { "season": "Post-Monsoon", "months": "Oct-Jan", "crops": ["Cowpea", "Sesame"] },
+    { "season": "Summer", "months": "Feb-May", "crops": ["Vegetables"] }
   ],
   "summary": "Brief 2-sentence summary of the plan",
   "tips": ["tip 1", "tip 2", "tip 3"],
@@ -229,7 +236,7 @@ Create a JSON response with this EXACT structure (no markdown, pure JSON):
 }
 
 RULES:
-- Create EXACTLY 3 or 4 zones (no more, no less)
+- Generate 1-4 logical zones based on the total area.
 - The current crop "${crop}" MUST be one of the zones
 - **CRITICAL — AREA ALLOCATION**: Do NOT split equally. The most suitable crop for this specific region should get the LARGEST area (40-55%). The second best gets 20-30%. The third gets 10-20%. Base area allocation on how well each crop fits the soil, climate, and rainfall of "${location}".
 - **ABSOLUTELY CRITICAL — NATIVE PLANTS ONLY**: You MUST heavily prioritize crops suitable for Kerala and the tropical Indian climate, such as: Coconut, Rubber, Tapioca (Cassava), Cardamom, Arecanut, Black Pepper, Ginger, Turmeric, Banana, Paddy (Rice), Mango, Jackfruit, Nutmeg, Cocoa, Cashew, and Coffee.
@@ -237,7 +244,7 @@ RULES:
 - Use VIBRANT, highly distinct colors for each zone — avoid similar shades (e.g. use #EF4444 red, #3B82F6 blue, #16A34A green, #EAB308 yellow, #7C3AED purple, #EC4899 pink)
 - Position x,y are normalized 0-1 within the field bounds
 - Consider intercropping opportunities (e.g. Coconut with Pepper, Tapioca, or Banana)
-- Suggest a 3-season rotation plan appropriate for the climate of "${location}" (Kharif, Rabi, Zaid).
+- Suggest a 3-season rotation plan appropriate for the climate of "${location}" (e.g. Monsoon, Post-Monsoon, Summer).
 - Return ONLY valid JSON, no markdown
 - Write every human-facing JSON string (zone names, reasons, benefits, spacing, seasons, summary, tips, and crop explanations) in ${responseLanguage} only. Keep crop names understandable in that language.`;
 

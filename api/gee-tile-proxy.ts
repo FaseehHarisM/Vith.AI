@@ -34,8 +34,18 @@ async function createJwt(email: string, privateKeyPem: string, scopes: string[])
   const headerB64 = base64url(enc.encode(JSON.stringify(header)));
   const payloadB64 = base64url(enc.encode(JSON.stringify(payload)));
   const unsignedToken = `${headerB64}.${payloadB64}`;
-  const pemBody = privateKeyPem.replace(/-----BEGIN PRIVATE KEY-----/g, "").replace(/-----END PRIVATE KEY-----/g, "").replace(/\s/g, "");
-  const keyBytes = Uint8Array.from(atob(pemBody), (c) => c.charCodeAt(0));
+  const pemBody = privateKeyPem
+    .replace(/-----BEGIN PRIVATE KEY-----/gi, "")
+    .replace(/-----END PRIVATE KEY-----/gi, "")
+    .replace(/\\n/g, "")
+    .replace(/\r/g, "")
+    .replace(/\n/g, "")
+    .replace(/\s/g, "")
+    .trim();
+  // Use Buffer in Node, fallback to atob
+  const keyBytes = typeof Buffer !== "undefined" 
+    ? Buffer.from(pemBody, "base64") 
+    : Uint8Array.from(atob(pemBody), (c) => c.charCodeAt(0));
   const key = await crypto.subtle.importKey("pkcs8", keyBytes, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
   const sig = new Uint8Array(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, enc.encode(unsignedToken)));
   return `${unsignedToken}.${base64url(sig)}`;

@@ -130,19 +130,22 @@ export default function Landing() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section id="features" className="relative z-10 px-6 md:px-12 pb-16">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-3">One platform. Every decision.</h2>
-          <p className="text-white/40 text-center mb-10 text-sm">From satellite to soil to your next action — zero hardware required.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <section id="features" className="relative z-10 px-6 md:px-12 pb-20">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">One platform. Every decision.</h2>
+          <p className="text-white/40 text-center mb-14 text-sm max-w-xl mx-auto">From satellite to soil to your next action — zero hardware required. A complete intelligence suite for Kerala agriculture.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {FEATURES.map((f, idx) => {
               const Icon = f.icon;
               return (
                 <div key={idx}
-                  className="p-5 rounded-xl border border-white/5 bg-white/[0.025] hover:border-[#7BC75B]/30 hover:bg-[#7BC75B]/5 transition-all group cursor-default">
-                  <div className="mb-4 text-white/50 group-hover:text-[#7BC75B] transition-colors"><Icon className="w-6 h-6" /></div>
-                  <div className="font-semibold text-sm text-white mb-2 group-hover:text-[#7BC75B] transition-colors">{f.title}</div>
-                  <div className="text-[11px] text-white/40 leading-relaxed">{f.desc}</div>
+                  className="p-6 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:-translate-y-1 hover:border-[#7BC75B]/40 hover:shadow-[0_8px_30px_rgba(123,199,91,0.1)] transition-all duration-300 group cursor-default backdrop-blur-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#7BC75B]/5 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-[#7BC75B]/10 transition-colors" />
+                  <div className="mb-5 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#7BC75B]/10 text-[#7BC75B] group-hover:scale-110 group-hover:bg-[#7BC75B] group-hover:text-[#050f08] transition-all duration-300">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="font-bold text-base text-white/90 mb-3 group-hover:text-[#7BC75B] transition-colors relative z-10">{f.title}</div>
+                  <div className="text-xs text-white/50 leading-relaxed relative z-10">{f.desc}</div>
                 </div>
               );
             })}

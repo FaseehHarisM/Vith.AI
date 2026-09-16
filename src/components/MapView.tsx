@@ -485,59 +485,65 @@ const MapView = ({ allFields, selectedFields, activeField, flyToField, onFlyToDo
           {/* Semi-transparent dark vignette */}
           <div className="absolute inset-0 bg-black/20" />
 
-          {/* FPO Banner */}
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 pointer-events-auto">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-950/90 border border-red-500/60 text-white text-xs font-bold shadow-lg backdrop-blur-sm">
-              <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-              Officer / FPO Risk View — {allFields.length} Farm{allFields.length !== 1 ? "s" : ""} Monitored
-            </div>
-          </div>
-
-          {/* Farm risk cards floating over the map */}
-          <div className="absolute top-28 right-4 pointer-events-auto w-64 space-y-2 max-h-[60vh] overflow-y-auto">
-            <div className="text-[10px] text-white/50 uppercase tracking-wider px-1 mb-1">Risk Overview</div>
-            {allFields.map(field => {
-              const risk = getFpoRisk(field);
-              const RiskIcon = risk.level === "high" ? ShieldAlert : risk.level === "medium" ? AlertTriangle : CheckCircle2;
-              return (
-                <button
-                  key={field.id}
-                  onClick={() => setFpoSelectedFarm(fpoSelectedFarm?.id === field.id ? null : field)}
-                  className="w-full text-left p-3 rounded-xl border backdrop-blur-md transition-all hover:scale-[1.01]"
-                  style={{
-                    backgroundColor: `${risk.color}15`,
-                    borderColor: `${risk.color}40`,
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <RiskIcon className="w-4 h-4" style={{ color: risk.color }} />
-                      <span className="text-xs font-semibold text-white truncate max-w-[120px]">{field.name}</span>
-                    </div>
-                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: `${risk.color}25`, color: risk.color }}>
-                      {risk.level}
-                    </span>
+                    {/* FPO Banner */}
+          {(() => {
+            const URBAN_CROPS = ["Residential", "Commercial", "Park / Garden", "Industrial", "Mixed Use", "Rooftop / Terrace", "Community Garden"];
+            const fpoFields = allFields.filter(f => !URBAN_CROPS.includes(f.crop));
+            
+            return (
+              <>
+                <div className="absolute top-16 left-1/2 -translate-x-1/2 pointer-events-auto">
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-950/90 border border-red-500/60 text-white text-xs font-bold shadow-lg backdrop-blur-sm">
+                    <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+                    Officer / FPO Risk View — {fpoFields.length} Farm{fpoFields.length !== 1 ? "s" : ""} Monitored
                   </div>
-                  <div className="text-[10px] text-white/50">{field.crop} · {(field.area * 2.47105).toFixed(1)} ac</div>
-                  {fpoSelectedFarm?.id === field.id && (
-                    <div className="mt-2 text-[10px] text-white/70 bg-black/30 rounded-lg p-2 leading-relaxed">
-                      {risk.reason}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+                </div>
 
-            {/* District summary */}
-            <div className="mt-3 p-3 rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm">
-              <div className="text-[10px] text-white/40 uppercase tracking-wider mb-2">District Summary</div>
-              <div className="flex justify-between text-[10px] items-center">
-                <span className="text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {allFields.filter(f => getFpoRisk(f).level === "low").length} healthy</span>
-                <span className="text-yellow-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {allFields.filter(f => getFpoRisk(f).level === "medium").length} watch</span>
-                <span className="text-red-400 flex items-center gap-1"><ShieldAlert className="w-3 h-3" /> {allFields.filter(f => getFpoRisk(f).level === "high").length} urgent</span>
-              </div>
-            </div>
-          </div>
+                {/* Farm risk cards floating over the map */}
+                <div className="absolute top-28 right-4 pointer-events-auto w-64 space-y-2 max-h-[60vh] overflow-y-auto">
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider px-1 mb-1">Risk Overview</div>
+                  {fpoFields.map(field => {
+                    const risk = getFpoRisk(field);
+                    const RiskIcon = risk.level === "high" ? ShieldAlert : risk.level === "medium" ? AlertTriangle : CheckCircle2;
+                    return (
+                      <button
+                        key={field.id}
+                        onClick={() => setFpoSelectedFarm(fpoSelectedFarm?.id === field.id ? null : field)}
+                        className="w-full text-left p-3 rounded-xl border backdrop-blur-md transition-all hover:scale-[1.01]"
+                        style={{
+                          backgroundColor: `${risk.color}15`,
+                          borderColor: `${risk.color}40`,
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-semibold text-sm text-white">{field.name}</span>
+                          <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-sm" style={{ color: risk.color, backgroundColor: `${risk.color}20` }}>
+                            {risk.level}
+                          </span>
+                        </div>
+                        <div className="text-xs text-white/70 flex items-center gap-1.5">
+                          <RiskIcon className="w-3.5 h-3.5" style={{ color: risk.color }} />
+                          {risk.reason}
+                        </div>
+                        <div className="text-[10px] text-white/50 mt-1.5">
+                          {field.crop} · {field.area} ac
+                        </div>
+                      </button>
+                    );
+                  })}
+
+                  <div className="mt-3 p-3 rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm">
+                    <div className="text-[10px] text-white/40 uppercase tracking-wider mb-2">District Summary</div>
+                    <div className="flex justify-between text-[10px] items-center">
+                      <span className="text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {fpoFields.filter(f => getFpoRisk(f).level === "low").length} healthy</span>
+                      <span className="text-yellow-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {fpoFields.filter(f => getFpoRisk(f).level === "medium").length} watch</span>
+                      <span className="text-red-400 flex items-center gap-1"><ShieldAlert className="w-3 h-3" /> {fpoFields.filter(f => getFpoRisk(f).level === "high").length} urgent</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </div>
       )}
 

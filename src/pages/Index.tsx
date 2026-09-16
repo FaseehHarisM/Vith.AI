@@ -6,6 +6,9 @@ import SidePanel from "@/components/SidePanel";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import MobileFieldSheet from "@/components/MobileFieldSheet";
+import MalayalamCopilot from "@/components/MalayalamCopilot";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useLanguage, useTranslation } from "@/lib/language";
 import { useSwipe } from "@/hooks/use-swipe";
 
 const ALL_FIELDS_KEY = "virdis-regions-v7";
@@ -35,6 +38,7 @@ function loadSelectedIds(allFields: Field[]): string[] {
 
 const Index = () => {
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
   const [view, setView] = useState<"map" | "analytics">("map");
   const [allFields, setAllFields] = useState<Field[]>(loadAllFields);
   const [selectedIds, setSelectedIds] = useState<string[]>(() => loadSelectedIds(loadAllFields()));
@@ -95,6 +99,9 @@ const Index = () => {
   if (isMobile) {
     return (
       <div className="h-screen w-screen bg-background flex flex-col relative overflow-hidden" {...swipeHandlers}>
+        <div className="absolute top-4 right-4 z-50">
+          <LanguageToggle />
+        </div>
         {/* Full-screen map always rendered behind */}
         <div className="absolute inset-0" style={{ bottom: 0 }}>
           <MapView allFields={allFields} selectedFields={selectedFields} activeField={activeField} flyToField={flyToField}
@@ -144,17 +151,22 @@ const Index = () => {
 
   // DESKTOP LAYOUT (unchanged)
   return (
-    <div className="h-screen w-screen bg-surface-outer flex items-center justify-center p-6">
+    <div className="h-screen w-screen bg-surface-outer flex items-center justify-center p-6 relative">
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageToggle />
+      </div>
       <div className="w-full h-full max-w-[1400px] max-h-[900px] rounded-2xl overflow-hidden bg-background shadow-2xl relative border-[#041009] border-2">
-        {/* View toggle */}
-        <div className="absolute top-4 z-20 flex gap-1 bg-card/80 backdrop-blur-sm rounded-lg border border-border p-1" style={{ left: "calc(50% - 15px)", transform: "translateX(-50%)" }}>
-          {(["map", "analytics"] as const).map((v) => (
-            <button key={v} onClick={() => setView(v)}
-              className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all duration-300 ${view === v ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-              {v === "map" ? "Map" : "Analytics"}
+        {/* View toggle (Desktop) */}
+        {!isMobile && (
+          <div className="absolute bottom-6 z-20 flex bg-muted/80 backdrop-blur-md p-1 rounded-xl shadow-lg border border-border" style={{ left: "50%", transform: "translateX(-50%)" }}>
+            <button onClick={() => setView("map")} className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${view === "map" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+              {t("Farm Map")}
             </button>
-          ))}
-        </div>
+            <button onClick={() => setView("analytics")} className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${view === "analytics" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+              {t("Planning & Insights")}
+            </button>
+          </div>
+        )}
 
         <div className="flex w-full h-full">
           <div className="flex-1 relative">
@@ -171,6 +183,11 @@ const Index = () => {
             onFieldClick={handleFieldClick} onFieldDoubleClick={handleFieldDoubleClick} onBackFromDetail={() => setDetailField(null)}
             onToggleField={handleToggleField} onApplySelection={handleApplySelection} onUpdateField={handleUpdateField} onDeleteField={handleDeleteField} onEditBoundary={handleEditBoundary} />
         </div>
+
+        {/* Global Malayalam Copilot */}
+        {activeField && (
+          <MalayalamCopilot field={activeField} />
+        )}
       </div>
     </div>
   );

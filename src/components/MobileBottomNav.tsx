@@ -7,8 +7,8 @@ interface MobileBottomNavProps {
 
 const tabs = [
   { id: "map" as const, icon: Map, label: "Map" },
-  { id: "fields" as const, icon: Layers, label: "Regions" },
-  { id: "analytics" as const, icon: BarChart3, label: "Analytics" },
+  { id: "fields" as const, icon: Layers, label: "Farms" },
+  { id: "analytics" as const, icon: BarChart3, label: "Plan & Insights" },
 ];
 
 const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {

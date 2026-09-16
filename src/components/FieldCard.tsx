@@ -1,6 +1,7 @@
 import { X, MoreHorizontal, MapPin } from "lucide-react";
 import { Field, haToAcres } from "@/data/fields";
 import { useState } from "react";
+import { useTranslation } from "@/lib/language";
 
 function getPolygonPoints(coordinates: [number, number][][]): string {
   const coords = coordinates[0];
@@ -31,6 +32,7 @@ interface FieldCardProps {
 }
 
 const FieldCard = ({ field, onRemove, variant = "select", isActive = false, style }: FieldCardProps) => {
+  const { t } = useTranslation();
   const isListVariant = variant === "list";
   const [isHovered, setIsHovered] = useState(false);
   const svgPoints = getPolygonPoints(field.coordinates);
@@ -61,14 +63,14 @@ const FieldCard = ({ field, onRemove, variant = "select", isActive = false, styl
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-foreground">{field.name}, {areaAcres} acres</span>
+          <span className="text-sm font-medium text-foreground">{field.name}, {areaAcres} {t("acres")}</span>
           {isListVariant && field.ndviChange !== undefined && (
             <span className="text-xs font-semibold" style={{ color: field.ndviChange >= 0 ? "hsl(120, 50%, 50%)" : "hsl(0, 62%, 50%)" }}>
               {field.ndviChange >= 0 ? "+" : ""}{field.ndviChange.toFixed(2)}
             </span>
           )}
         </div>
-        <div className="text-xs text-muted-foreground">{field.crop}</div>
+        <div className="text-xs text-muted-foreground">{t(field.crop)}</div>
         {isListVariant && field.group && <div className="text-xs text-muted-foreground">{field.group}</div>}
         <div className="text-xs text-muted-foreground flex items-center gap-1">
           <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" /> {field.location}

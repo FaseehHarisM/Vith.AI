@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/tooltip";
 import jsPDF from "jspdf";
 import { callBackend } from "@/lib/call-backend";
-import { useLanguage } from "@/lib/language";
+import { useLanguage, useTranslation } from "@/lib/language";
 
 interface CropZone {
   id: string;
@@ -1191,12 +1191,11 @@ function parseMonthRange(monthsStr: string): number[] {
 }
 
 const SEASON_COLORS: Record<string, string> = {
-  Kharif: "#22C55E",
-  Rabi: "#F97316",
-  Zaid: "#3B82F6",
+  Monsoon: "#3B82F6", // Blue for rain
+  "Post-Monsoon": "#F97316", // Orange/Autumn
+  Summer: "#EAB308", // Yellow for sun
   Perennial: "#16A34A",
   Spring: "#22D3EE",
-  Summer: "#EAB308",
   Autumn: "#F97316",
   Winter: "#3B82F6",
   Fall: "#F97316",
@@ -1328,15 +1327,15 @@ function chooseRotationPlan(chosenProfiles: CropProfile[], signals: PlanningSign
   const currentMonth = new Date().getMonth();
 
   if (isTropical) {
-    const isKharif = currentMonth >= 5 && currentMonth <= 9;
-    const isRabi = currentMonth >= 10 || currentMonth <= 2;
-    const kharif = signals.annualRainfall > 1400 ? (names.has("Rice") ? "Rice" : names.has("Turmeric") ? "Turmeric" : "Maize") : names.has("Millet") ? "Millet" : "Groundnut";
-    const rabi = signals.temperature < 22 ? (names.has("Wheat") ? "Wheat" : "Chickpea") : names.has("Chickpea") ? "Chickpea" : "Mustard";
-    const zaid = names.has("Mung Bean") ? "Mung Bean" : names.has("Tomato") ? "Tomato" : "Groundnut";
+    const isMonsoon = currentMonth >= 5 && currentMonth <= 9;
+    const isPostMonsoon = currentMonth >= 10 || currentMonth <= 2;
+    const monsoon = signals.annualRainfall > 1400 ? (names.has("Rice") ? "Rice" : names.has("Turmeric") ? "Turmeric" : "Maize") : names.has("Millet") ? "Millet" : "Groundnut";
+    const postMonsoon = signals.temperature < 22 ? (names.has("Wheat") ? "Wheat" : "Chickpea") : names.has("Chickpea") ? "Chickpea" : "Mustard";
+    const summer = names.has("Mung Bean") ? "Mung Bean" : names.has("Tomato") ? "Tomato" : "Groundnut";
     return [
-      { season: `Kharif${isKharif ? " (Current)" : ""}`, months: "Jun-Oct", crops: [kharif, names.has("Black Pepper") ? "Black Pepper" : "Cover crop", "Mung Bean"] },
-      { season: `Rabi${isRabi ? " (Current)" : ""}`, months: "Nov-Mar", crops: [rabi, names.has("Mustard") ? "Mustard" : "Lentil"] },
-      { season: `Zaid${!isKharif && !isRabi ? " (Current)" : ""}`, months: "Mar-Jun", crops: [zaid, "Mung Bean"] },
+      { season: `Monsoon${isMonsoon ? " (Current)" : ""}`, months: "Jun-Oct", crops: [monsoon, names.has("Black Pepper") ? "Black Pepper" : "Cover crop", "Mung Bean"] },
+      { season: `Post-Monsoon${isPostMonsoon ? " (Current)" : ""}`, months: "Nov-Mar", crops: [postMonsoon, names.has("Mustard") ? "Mustard" : "Lentil"] },
+      { season: `Summer${!isMonsoon && !isPostMonsoon ? " (Current)" : ""}`, months: "Mar-Jun", crops: [summer, "Mung Bean"] },
     ];
   }
 
@@ -1707,6 +1706,9 @@ function getDotSize(cropName: string): number {
 
 const CropPlanningSection = ({ field, ndviData, soilData, weatherData, suitabilityData, landUseData, mapToken }: CropPlanningSectionProps) => {
   const isMobile = useIsMobile();
+  const URBAN_CROPS = ["Residential", "Commercial", "Park / Garden", "Industrial", "Mixed Use", "Rooftop / Terrace", "Community Garden"];
+  const isUrban = URBAN_CROPS.includes(field.crop);
+  const { t } = useTranslation();
   const { language, languageName } = useLanguage();
   const [plan, setPlan] = useState<CropPlan | null>(null);
   const [loading, setLoading] = useState(false);
@@ -1805,6 +1807,7 @@ const CropPlanningSection = ({ field, ndviData, soilData, weatherData, suitabili
           weatherData,
           suitabilityData,
           responseLanguage: languageName,
+          enforcedZones: fallbackPlan.zones.map(z => ({ crop: z.crop, area_pct: z.area_pct })),
         });
 
       const timeout = new Promise<never>((_, reject) => {
@@ -2077,7 +2080,7 @@ const CropPlanningSection = ({ field, ndviData, soilData, weatherData, suitabili
     return (
       <div className="animate-fade-in space-y-4" style={{ animationDelay: "450ms" }}>
         <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-          <Sprout className="w-4 h-4" /> Crop Planning
+          <Sprout className="w-4 h-4" /> {t("Crop Planning")}
         </h3>
         <div className="p-5 rounded-xl border border-destructive/30 bg-destructive/5 space-y-3">
           <div className="flex items-center gap-3">
@@ -2103,9 +2106,9 @@ const CropPlanningSection = ({ field, ndviData, soilData, weatherData, suitabili
       <div className="flex items-center justify-between gap-3">
         <div className="space-y-1">
           <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-            <Sprout className="w-4 h-4" /> Crop Planning
+            <Sprout className="w-4 h-4" /> {t("Crop Planning")}
           </h3>
-          {plannerNotice && <p className="text-[11px] text-muted-foreground max-w-[560px]">{plannerNotice}</p>}
+          {plannerNotice && <p className="text-[11px] text-muted-foreground max-w-[560px]">{t(plannerNotice)}</p>}
         </div>
 
         <div className="flex items-center gap-2">
@@ -2158,8 +2161,8 @@ const CropPlanningSection = ({ field, ndviData, soilData, weatherData, suitabili
         {loading && (
           <div className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
             <Loader2 className="w-6 h-6 animate-spin text-primary mb-2" />
-            <p className="text-sm text-foreground/80">Analyzing field data...</p>
-            <p className="text-[10px] text-muted-foreground mt-1">Using NDVI, soil, weather, water access, and terrain signals</p>
+            <p className="text-sm text-foreground/80">{t("Analyzing field data...")}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">{t("Using NDVI, soil, weather, water access, and terrain signals")}</p>
           </div>
         )}
 
@@ -2172,7 +2175,7 @@ const CropPlanningSection = ({ field, ndviData, soilData, weatherData, suitabili
                 filterCrop === null ? "bg-white/20 text-white" : "text-white/60 hover:text-white/90"
               }`}
             >
-              <Layers className="w-3 h-3" /> All
+              <Layers className="w-3 h-3" /> {t("All")}
             </button>
             {plan.zones.map((zone) => (
               <button
@@ -2200,18 +2203,18 @@ const CropPlanningSection = ({ field, ndviData, soilData, weatherData, suitabili
             <div className="p-3 rounded-xl border border-border bg-accent/15 text-center">
               <Droplets className="w-4 h-4 mx-auto mb-1 text-primary" />
               <div className="text-lg font-semibold text-foreground">{plan.water_saving_pct}%</div>
-              <div className="text-[10px] text-muted-foreground">Water Saved</div>
+              <div className="text-[10px] text-muted-foreground">{t("Water Saved")}</div>
             </div>
             <div className="p-3 rounded-xl border border-border bg-accent/15 text-center">
               <TrendingUp className="w-4 h-4 mx-auto mb-1 text-primary" />
               <div className="text-lg font-semibold text-foreground">+{plan.expected_revenue_increase_pct}%</div>
-              <div className="text-[10px] text-muted-foreground">Revenue Boost</div>
+              <div className="text-[10px] text-muted-foreground">{t("Revenue Boost")}</div>
             </div>
           </div>
 
           {/* Zone Allocation Pie */}
           <div>
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Zone Allocation</h4>
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">{t("Zone Allocation")}</h4>
             <div className="rounded-2xl border border-border/40 p-4 flex flex-col items-center justify-center" style={{ height: isMobile ? 200 : 240, background: "hsla(150, 18%, 14%, 0.6)" }}>
               <ResponsiveContainer width="100%" height={isMobile ? 130 : 160}>
                 <PieChart>
@@ -2270,56 +2273,64 @@ const CropPlanningSection = ({ field, ndviData, soilData, weatherData, suitabili
                   
                   <div className="grid grid-cols-3 gap-2">
                     <div className="p-2 rounded bg-background border border-border flex flex-col justify-center items-center">
-                      <span className="text-[9px] text-muted-foreground text-center">Soil Match</span>
+                      <span className="text-[9px] text-muted-foreground text-center">{t("Soil Match")}</span>
                       <span className="text-xs font-bold text-green-500">92%</span>
                     </div>
                     <div className="p-2 rounded bg-background border border-border flex flex-col justify-center items-center">
-                      <span className="text-[9px] text-muted-foreground text-center">Climate Fit</span>
+                      <span className="text-[9px] text-muted-foreground text-center">{t("Climate Fit")}</span>
                       <span className="text-xs font-bold text-green-500">88%</span>
                     </div>
                     <div className="p-2 rounded bg-background border border-border flex flex-col justify-center items-center">
-                      <span className="text-[9px] text-muted-foreground text-center">Water Demand</span>
+                      <span className="text-[9px] text-muted-foreground text-center">{t("Water Demand")}</span>
                       <span className="text-xs font-bold text-yellow-500 capitalize">{selectedZone.water_needs}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Economics / ROI */}
-                <div className="pt-4 border-t border-primary/10">
-                  <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3" /> Projected Economics (Per Year)
-                  </h5>
-                  
-                  <div className="bg-background rounded-lg border border-border p-3 space-y-2">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-muted-foreground">Estimated Input Cost</span>
-                      <span className="font-medium text-foreground text-red-400">
-                        ₹{(Math.round((selectedZone.area_pct * 300) + 12000)).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-muted-foreground">Estimated Revenue</span>
-                      <span className="font-medium text-foreground text-green-400">
-                        ₹{(Math.round((selectedZone.area_pct * 900) + 45000)).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="h-px w-full bg-border/50 my-1"></div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="font-semibold text-foreground">Net Margin</span>
-                      <span className="font-bold text-primary">
-                        ₹{(Math.round((selectedZone.area_pct * 600) + 33000)).toLocaleString()}
-                      </span>
-                    </div>
+                  <div className="pt-4 border-t border-primary/10">
+                    <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" /> {isUrban ? t("Urban Value") : t("Projected Economics (Per Year)")}
+                    </h5>
+                    
+                    {isUrban ? (
+                      <div className="bg-background rounded-lg border border-border p-3 text-center text-xs text-muted-foreground">
+                        {t("Commercial yield and revenue estimates are not applicable for residential or urban zones.")}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="bg-background rounded-lg border border-border p-3 space-y-2">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-muted-foreground">{t("Estimated Input Cost")}</span>
+                            <span className="font-medium text-foreground text-red-400">
+                              ₹{(Math.round((selectedZone.area_pct * 300) + 12000)).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-muted-foreground">{t("Estimated Revenue")}</span>
+                            <span className="font-medium text-foreground text-green-400">
+                              ₹{(Math.round((selectedZone.area_pct * 900) + 45000)).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="h-px w-full bg-border/50 my-1"></div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="font-semibold text-foreground">{t("Net Margin")}</span>
+                            <span className="font-bold text-primary">
+                              ₹{(Math.round((selectedZone.area_pct * 600) + 33000)).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-[9px] text-muted-foreground text-right mt-1 opacity-70">
+                          {t("Based on local market rates &")} {selectedZone.yield_estimate} {t("yield")}
+                        </div>
+                      </>
+                    )}
                   </div>
-                  <div className="text-[9px] text-muted-foreground text-right mt-1 opacity-70">
-                    *Based on local {selectedZone.crop.toLowerCase()} market rates & {selectedZone.yield_estimate} yield
-                  </div>
-                </div>
 
                 <div className="grid grid-cols-3 gap-2 text-[10px] pt-2 border-t border-primary/10">
-                  <div><span className="text-muted-foreground block">Area</span> <span className="font-medium">{selectedZone.area_pct}%</span></div>
-                  <div><span className="text-muted-foreground block">Spacing</span> <span className="font-medium">{selectedZone.spacing_m}m</span></div>
-                  <div><span className="text-muted-foreground block">Season</span> <span className="font-medium">{selectedZone.season.split(' ')[0]}</span></div>
+                  <div><span className="text-muted-foreground block">{t("Area")}</span> <span className="font-medium">{selectedZone.area_pct}%</span></div>
+                  <div><span className="text-muted-foreground block">{t("Spacing")}</span> <span className="font-medium">{selectedZone.spacing_m}m</span></div>
+                  <div><span className="text-muted-foreground block">{t("Season")}</span> <span className="font-medium">{selectedZone.season.split(' ')[0]}</span></div>
                 </div>
               </div>
             </div>
@@ -2392,7 +2403,7 @@ const CropPlanningSection = ({ field, ndviData, soilData, weatherData, suitabili
             {calendarRows.length > 0 && (
               <div className="rounded-2xl border border-border overflow-hidden" style={{ background: "hsla(150, 18%, 14%, 0.6)" }}>
                 <div className="grid grid-cols-[90px_repeat(12,1fr)] text-[10px] border-b border-border/50">
-                  <div className="p-2 text-muted-foreground font-medium">Season</div>
+                  <div className="p-2 text-muted-foreground font-medium">{t("Season")}</div>
                   {MONTHS.map((month) => (
                     <div key={month} className="p-1.5 text-center text-muted-foreground">
                       {month}

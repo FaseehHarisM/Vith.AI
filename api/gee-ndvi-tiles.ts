@@ -98,11 +98,11 @@ serve(async (req) => {
 
     // No clipping — NDVI is rendered globally
 
-    // Build date range (last 3 months)
+    // Build date range (last 6 months to survive monsoon)
     const now = new Date();
-    const threeMonthsAgo = new Date(now);
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-    const startDate = threeMonthsAgo.toISOString().split("T")[0];
+    const sixMonthsAgo = new Date(now);
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const startDate = sixMonthsAgo.toISOString().split("T")[0];
     const endDate = now.toISOString().split("T")[0];
 
     // Base collection: Sentinel-2 SR, filtered by date and cloud
@@ -149,7 +149,7 @@ serve(async (req) => {
               functionName: "Filter.lessThan",
               arguments: {
                 leftField: { constantValue: "CLOUDY_PIXEL_PERCENTAGE" },
-                rightValue: { constantValue: 20 },
+                rightValue: { constantValue: 60 },
               },
             },
           },

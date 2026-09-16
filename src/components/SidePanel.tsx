@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Search, ArrowUpDown, SlidersHorizontal, MapPin, PenTool } from "lucide-react";
 import { Field } from "@/data/fields";
+import { useTranslation } from "@/lib/language";
 import FieldCard from "./FieldCard";
 import FieldDetailView from "./FieldDetailView";
 import FieldEditDialog from "./FieldEditDialog";
@@ -33,6 +34,7 @@ const SidePanel = ({
   onDeleteField,
   onEditBoundary,
 }: SidePanelProps) => {
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "area" | "ndvi">("name");
@@ -86,7 +88,7 @@ const SidePanel = ({
         <div className="relative">
           <input
             type="text"
-            placeholder="Search farms..."
+            placeholder={t("Search farms...")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-secondary/50 border border-border rounded-lg px-3 py-2 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
@@ -106,7 +108,7 @@ const SidePanel = ({
             }`}
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
-            {filterCrop || "Filter"}
+            {filterCrop ? t(filterCrop) : t("Filter")}
           </button>
           {showFilterMenu && (
             <div className="absolute top-full mt-1 left-0 w-40 rounded-lg border border-border bg-card shadow-xl z-20 overflow-hidden">
@@ -143,7 +145,7 @@ const SidePanel = ({
               <MapPin className="w-6 h-6 text-muted-foreground/60" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-foreground">No farms yet</h3>
+              <h3 className="text-sm font-semibold text-foreground">{t("No farms yet")}</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">Create your first farm to get started:</p>
             </div>
             <div className="text-left space-y-2 w-full">
@@ -178,13 +180,13 @@ const SidePanel = ({
           </div>
         ))}
         {filtered.length === 0 && allFields.length > 0 && (
-          <div className="text-center py-8 text-sm text-muted-foreground">No farms match</div>
+          <div className="text-center py-8 text-sm text-muted-foreground">{t("No farms match")}</div>
         )}
       </div>
 
       <div className="p-4 border-t border-border">
         <div className="text-xs text-muted-foreground flex items-center gap-1.5">
-          <MapPin className="w-3 h-3" /> {filtered.length} farm{filtered.length !== 1 ? "s" : ""}
+          <MapPin className="w-3 h-3" /> {filtered.length} {filtered.length !== 1 ? t("farms") : t("farm")}
         </div>
       </div>
 

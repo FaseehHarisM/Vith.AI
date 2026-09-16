@@ -245,7 +245,7 @@ function buildFilteredCollection(coords: [number, number][], startDate: string, 
             functionName: "Filter.lessThan",
             arguments: {
               leftField: { constantValue: "CLOUDY_PIXEL_PERCENTAGE" },
-              rightValue: { constantValue: 20 },
+              rightValue: { constantValue: 40 }, // Relaxed to 40% for monsoon
             },
           },
         },
@@ -253,7 +253,7 @@ function buildFilteredCollection(coords: [number, number][], startDate: string, 
     },
   };
 
-  // Sort by date, limit to 20
+  // Sort by date, descending (most recent first), limit to 20
   const sorted = {
     functionInvocationValue: {
       functionName: "Collection.limit",
@@ -261,7 +261,7 @@ function buildFilteredCollection(coords: [number, number][], startDate: string, 
         collection: cloudFiltered,
         limit: { constantValue: 20 },
         key: { constantValue: "system:time_start" },
-        ascending: { constantValue: true },
+        ascending: { constantValue: false },
       },
     },
   };
@@ -345,7 +345,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { polygon } = body;
+    const { polygon, startDate: reqStartDate, endDate: reqEndDate } = body;
 
     if (!polygon) throw new Error("polygon is required");
 
@@ -375,8 +375,8 @@ serve(async (req) => {
     const projectId = Deno.env.get("GEE_PROJECT_ID") || "earthengine-legacy";
 
     const now = new Date();
-    const endDate = now.toISOString().split("T")[0];
-    const startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const endDate = reqEndDate ? reqEndDate : now.toISOString().split("T")[0];
+    const startDate = reqStartDate ? reqStartDate : new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
     console.log(`NDVI time-series: ${coords.length} vertices, ${startDate} to ${endDate}`);
 
@@ -394,14 +394,7 @@ serve(async (req) => {
     console.log(`Found ${count} images`);
 
     if (count === 0) {
-      return new Response(JSON.stringify({
-        timeseries: [],
-        growth_rate: null,
-        canopy_cover: null,
-        biomass_estimate: null,
-        growth_stage: null,
-        error: "No valid Sentinel-2 imagery found for this area in the last 90 days",
-      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      console.log("0 images found in date range, will generate DEMO fallback below.");
     }
 
     // Step 2: Convert to list
@@ -443,29 +436,54 @@ serve(async (req) => {
     console.log(`Time-series: ${timeseries.length} valid observations`);
 
     if (timeseries.length === 0) {
-      const emptyPayload = {
-        timeseries: [],
-        growth_rate: null,
-        canopy_cover: null,
-        biomass_estimate: null,
-        growth_stage: null,
-        error: "NDVI computation returned no valid results",
-        fallback: true,
-      };
-      const stale = getCachedTimeseries(cacheKey, true);
-      return new Response(JSON.stringify(stale ? { ...stale, stale: true, error: emptyPayload.error, fallback: true } : emptyPayload), { headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } });
+      console.log("No valid timeseries found. Falling back to DEMO data.");
+      // Generate explicit DEMO data
+      const demoEndDate = new Date();
+      const mockTimeseries = [];
+      let baseNdvi = 0.45;
+      for (let i = 12; i >= 0; i--) {
+        const d = new Date(demoEndDate.getTime() - i * 15 * 24 * 60 * 60 * 1000);
+        baseNdvi += (Math.random() * 0.1 - 0.03); // slight upward trend
+        baseNdvi = Math.max(0.1, Math.min(0.9, baseNdvi));
+        mockTimeseries.push({ date: d.toISOString().split("T")[0], ndvi: Math.round(baseNdvi * 100) / 100 });
+      }
+      return new Response(JSON.stringify({
+        timeseries: mockTimeseries,
+        growth_rate: 0.0024,
+        canopy_cover: 65,
+        biomass_estimate: 4.2,
+        growth_stage: "Tillering (DEMO)",
+        growth_progress: 45,
+        latest_ndvi: mockTimeseries[mockTimeseries.length - 1].ndvi,
+        mean_ndvi: 0.55,
+        date_range: "Last 6 Months (DEMO DATA)",
+        demo: true
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Compute derived indicators
     const latestNdvi = timeseries[timeseries.length - 1].ndvi!;
     const earliestNdvi = timeseries[0].ndvi!;
 
-    // Growth rate: NDVI change per day
+    // Growth rate: linear regression slope (NDVI change per day) to ignore cloudy outliers
     let growth_rate: number | null = null;
     if (timeseries.length >= 2) {
-      const daysDiff = (new Date(timeseries[timeseries.length - 1].date).getTime() - new Date(timeseries[0].date).getTime()) / (1000 * 60 * 60 * 24);
-      if (daysDiff > 0) {
-        growth_rate = Math.round(((latestNdvi - earliestNdvi) / daysDiff) * 10000) / 10000;
+      const firstDate = new Date(timeseries[0].date).getTime();
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+      const n = timeseries.length;
+      
+      timeseries.forEach(p => {
+        const days = (new Date(p.date).getTime() - firstDate) / (1000 * 60 * 60 * 24);
+        sumX += days;
+        sumY += p.ndvi!;
+        sumXY += days * p.ndvi!;
+        sumX2 += days * days;
+      });
+      
+      const denominator = (n * sumX2 - sumX * sumX);
+      if (denominator !== 0) {
+        const slope = (n * sumXY - sumX * sumY) / denominator;
+        growth_rate = Math.round(slope * 10000) / 10000;
       }
     }
 

@@ -117,13 +117,8 @@ const NewFieldDialog = ({ coordinates, mapToken, existingFieldColors, onSave, on
       let isUrban = false;
       if (geeData?.land_use) {
         const builtUp = geeData.land_use["Built-up"] || 0;
-        isUrban = builtUp >= 30;
-      } else if (geoData?.features?.[0]) {
-        // Fallback: check Mapbox place type
-        const placeType = geoData.features[0].place_type?.[0] || "";
-        const placeName = (geoData.features[0].place_name || "").toLowerCase();
-        isUrban = ["place", "locality", "neighborhood", "address"].includes(placeType) ||
-          ["city", "town", "metro", "urban", "suburb", "downtown"].some(k => placeName.includes(k));
+        // In places like Kerala, farms often have houses/barns. Require >60% built-up to be considered purely urban.
+        isUrban = builtUp >= 60;
       }
 
       setRegionType(isUrban ? "urban" : "rural");
